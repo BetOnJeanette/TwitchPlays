@@ -1,26 +1,10 @@
 import concurrent.futures
-import random
 import keyboard
 import pydirectinput
 import pyautogui
 import TwitchPlays_Connection
 from TwitchPlays_KeyCodes import *
-
-##################### GAME VARIABLES #####################
-
-# Replace this with your Twitch username. Must be all lowercase.
-TWITCH_CHANNEL = 'dougdougw' 
-
-# If streaming on Youtube, set this to False
-STREAMING_ON_TWITCH = True
-
-# If you're streaming on Youtube, replace this with your Youtube's Channel ID
-# Find this by clicking your Youtube profile pic -> Settings -> Advanced Settings
-YOUTUBE_CHANNEL_ID = "YOUTUBE_CHANNEL_ID_HERE" 
-
-# If you're using an Unlisted stream to test on Youtube, replace "None" below with your stream's URL in quotes.
-# Otherwise you can leave this as "None"
-YOUTUBE_STREAM_URL = None
+from StreamConnections import StreamConnectionFactory
 
 ##################### MESSAGE QUEUE VARIABLES #####################
 
@@ -52,12 +36,7 @@ while countdown > 0:
     countdown -= 1
     time.sleep(1)
 
-if STREAMING_ON_TWITCH:
-    t = TwitchPlays_Connection.Twitch()
-    t.twitch_connect(TWITCH_CHANNEL)
-else:
-    t = TwitchPlays_Connection.YouTube()
-    t.youtube_connect(YOUTUBE_CHANNEL_ID, YOUTUBE_STREAM_URL)
+t = StreamConnectionFactory.getJeansTwitch()
 
 def handle_message(message):
     try:
