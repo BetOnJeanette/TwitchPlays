@@ -24,3 +24,6 @@ class Message:
             return False
         character = self.sender[0].lower()
         return not character.isalpha()
+
+    def __str__(self):
+        return f'Got this message from {self.sender}: {self.contents}'
