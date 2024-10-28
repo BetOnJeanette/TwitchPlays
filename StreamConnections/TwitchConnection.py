@@ -9,7 +9,8 @@ import socket
 import re
 import random
 import time
-import StreamConnection
+from StreamConnection import StreamConnection
+from message import Message
 
 MAX_TIME_TO_WAIT_FOR_LOGIN = 3
 
@@ -118,10 +119,7 @@ class Twitch(StreamConnection):
         for irc_message in self.receive_and_parse_data():
             cmd = irc_message['command']
             if cmd == 'PRIVMSG':
-                privmsgs.append({
-                    'username': irc_message['name'],
-                    'message': irc_message['trailing'],
-                })
+                privmsgs.append(Message(irc_message['name'], irc_message['trailing']))
             elif cmd == 'PING':
                 self.sock.send(b'PONG :tmi.twitch.tv\r\n')
             elif cmd == '001':

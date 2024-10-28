@@ -4,7 +4,8 @@ import time
 import json
 import concurrent.futures
 import traceback
-import StreamConnection
+from StreamConnection import StreamConnection
+from message import Message
 
 YOUTUBE_FETCH_INTERVAL = 1
 
@@ -190,10 +191,7 @@ class YouTube(StreamConnection):
                 self.fetch_job = None
                 self.next_fetch_time = time.time() + YOUTUBE_FETCH_INTERVAL
             for item in res:
-                msg = {
-                    'username': item['author'],
-                    'message': YouTube.parseMessage(item['content'])
-                }
+                msg = Message(item['author'], YouTube.parseMessage(item['content']))
                 messages.append(msg)
         return messages
 
