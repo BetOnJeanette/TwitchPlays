@@ -8,6 +8,7 @@ import StreamConnection
 
 YOUTUBE_FETCH_INTERVAL = 1
 
+
 # Thanks to Ottomated for helping with the yt side of things!
 class YouTube(StreamConnection):
     session = None
@@ -30,11 +31,12 @@ class YouTube(StreamConnection):
 
     def reconnect(self, delay):
         if self.fetch_job and self.fetch_job.running():
-            if not fetch_job.cancel():
+            if not self.fetch_job.cancel():
                 print("Waiting for fetch job to finish...")
                 self.fetch_job.result()
         print(f"Retrying in {delay}...")
-        if self.session: self.session.close()
+        if self.session:
+            self.session.close()
         self.session = None
         self.config = {}
         self.payload = {}
@@ -87,7 +89,7 @@ class YouTube(StreamConnection):
         iframe_continuation = None
         try:
             iframe_continuation = initial_data['contents']['twoColumnWatchNextResults']['conversationBar']['liveChatRenderer']['header']['liveChatHeaderRenderer']['viewSelector']['sortFilterSubMenuRenderer']['subMenuItems'][1]['continuation']['reloadContinuationData']['continuation']
-        except Exception as e:
+        except Exception:
             print(f"Couldn't find the livestream chat. Is the channel not live? url: {live_url}")
             time.sleep(5)
             exit(1)
@@ -144,23 +146,28 @@ class YouTube(StreamConnection):
             messages = []
             if 'actions' in cont:
                 for action in cont['actions']:
-                    if 'addChatItemAction' in action:
-                        if 'item' in action['addChatItemAction']:
-                            if 'liveChatTextMessageRenderer' in action['addChatItemAction']['item']:
-                                item = action['addChatItemAction']['item']['liveChatTextMessageRenderer']
-                                messages.append({
-                                    'author': item['authorName']['simpleText'],
-                                    'content': item['message']['runs']
-                                })
-            return messages
-        except Exception as e:
-            print(f"Failed to parse messages.")
+                    messages.append(YouTube.parseAction(action))
+            return filter((lambda x: x is not None), messages)
+        except Exception:
+            print("Failed to parse messages.")
             print("Body:", res.text)
             traceback.print_exc()
         return []
 
+    def parseAction(action):
+        if 'addChatItemAction' not in action:
+            return None
+        if 'item' not in action['addChatItemAction']:
+            return None
+        if 'liveChatTextMessageRenderer' in action['addChatItemAction']['item']:
+            item = action['addChatItemAction']['item']['liveChatTextMessageRenderer']
+            return ({
+                'author': item['authorName']['simpleText'],
+                'content': item['message']['runs']
+            })
+
     def receiveMessages(self):
-        if self.session == None:
+        if self.session is not None:
             self.reconnect(0)
         messages = []
         if not self.fetch_job:
@@ -185,12 +192,16 @@ class YouTube(StreamConnection):
             for item in res:
                 msg = {
                     'username': item['author'],
-                    'message': ''
+                    'message': YouTube.parseMessage(item['content'])
                 }
-                for part in item['content']:
-                    if 'text' in part:
-                        msg['message'] += part['text']
-                    elif 'emoji' in part:
-                        msg['message'] += part['emoji']['emojiId']
                 messages.append(msg)
         return messages
+
+    def parseMessage(content):
+        msg = ""
+        for part in content:
+            if 'text' in part:
+                msg['message'] += part['text']
+            elif 'emoji' in part:
+                msg['message'] += part['emoji']['emojiId']
+        return msg

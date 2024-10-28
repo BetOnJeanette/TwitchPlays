@@ -1,10 +1,9 @@
-# DougDoug Note: 
-# This is the code that connects to Twitch / Youtube and checks for new messages.
+# DougDoug Note:
+# This is the code that connects to Twitch and checks for new messages.
 # You should not need to modify anything in this file, just use as is.
 
 # This code is based on Wituz's "Twitch Plays" tutorial, updated for Python 3.X
 # http://www.wituz.com/make-your-own-twitch-plays-stream.html
-# Updated for Youtube by DDarknut, with help by Ottomated
 
 import socket
 import re
@@ -14,6 +13,7 @@ import StreamConnection
 
 MAX_TIME_TO_WAIT_FOR_LOGIN = 3
 
+
 class Twitch(StreamConnection):
     re_prog = None
     sock = None
@@ -21,9 +21,11 @@ class Twitch(StreamConnection):
     login_ok = False
     channel = ''
     login_timestamp = 0
+    messages_not_to_worry_about = { '002', '003', '004', '375', '372', '376', '353', '366' }
 
     def connect(self, channel):
-        if self.sock: self.sock.close()
+        if self.sock:
+            self.sock.close()
         self.sock = None
         self.partial = b''
         self.login_ok = False
@@ -64,7 +66,9 @@ class Twitch(StreamConnection):
                 break
             # except OSError as e:
             #     if e.winerror == 10035:
-            #         # This "error" is expected -- we receive it if timeout is set to zero, and there is no data to read on the socket.
+            #         # This "error" is expected
+            #           we receive it if timeout is set to zero,
+            #           and there is no data to read on the socket.
             #         break
             except Exception as e:
                 print('Unexpected connection error. Reconnecting in a second...', e)
@@ -128,14 +132,8 @@ class Twitch(StreamConnection):
                 print('Successfully joined channel %s' % irc_message['params'][0])
             elif cmd == 'NOTICE':
                 print('Server notice:', irc_message['params'], irc_message['trailing'])
-            elif cmd == '002': continue
-            elif cmd == '003': continue
-            elif cmd == '004': continue
-            elif cmd == '375': continue
-            elif cmd == '372': continue
-            elif cmd == '376': continue
-            elif cmd == '353': continue
-            elif cmd == '366': continue
+            elif cmd in self.messages_not_to_worry_about:
+                continue
             else:
                 print('Unhandled irc message:', irc_message)
 

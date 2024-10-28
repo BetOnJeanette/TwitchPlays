@@ -1,6 +1,7 @@
-from abc import ABC,abstractmethod
+from abc import ABC, abstractmethod
+
+
 class StreamConnection(ABC):
-    
     @abstractmethod
     def connect():
         pass
