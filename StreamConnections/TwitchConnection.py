@@ -10,7 +10,7 @@ import re
 import random
 import time
 from StreamConnection import StreamConnection
-from message import Message
+from Message import Message
 
 MAX_TIME_TO_WAIT_FOR_LOGIN = 3
 

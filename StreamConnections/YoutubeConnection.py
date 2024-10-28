@@ -5,7 +5,7 @@ import json
 import concurrent.futures
 import traceback
 from StreamConnection import StreamConnection
-from message import Message
+from Message import Message
 
 YOUTUBE_FETCH_INTERVAL = 1
 
